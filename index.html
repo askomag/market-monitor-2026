@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PRO Мониторинг цен 4.1 — цены, остатки и периоды</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--blue2:#dbeafe;--green:#059669;--greenbg:#dcfce7;--red:#dc2626;--redbg:#fee2e2;--amber:#d97706;--amberbg:#fef3c7;--dark:#111827;--shadow:0 12px 30px rgba(15,23,42,.08);--radius:22px}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#eef4ff 0%,#f8fafc 45%,#f3f6fb 100%);font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:var(--text)}
+.app{max-width:1760px;margin:0 auto;padding:22px}.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}.title h1{margin:0;font-size:32px;letter-spacing:-.03em}.title p{margin:8px 0 0;color:var(--muted)}
+.badge{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:#e0f2fe;color:#075985;font-weight:800;font-size:13px}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}.card{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid rgba(226,232,240,.8);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}.span12{grid-column:span 12}.span8{grid-column:span 8}.span4{grid-column:span 4}.span6{grid-column:span 6}
+h2{margin:0 0 14px;font-size:20px}.small{font-size:12px;color:var(--muted)}label{display:block;font-size:12px;color:#475569;font-weight:800;margin-bottom:6px}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:14px;background:#fff;padding:10px 12px;font-size:14px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}textarea{min-height:42px;resize:vertical}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.field{flex:1;min-width:150px}.btn{border:0;border-radius:999px;padding:10px 15px;font-weight:900;cursor:pointer;color:#fff;background:var(--blue);transition:.15s}.btn:hover{transform:translateY(-1px);filter:brightness(.97)}.btn.gray{background:#475569}.btn.green{background:#047857}.btn.red{background:#dc2626}.btn.dark{background:#111827}.btn.amber{background:#d97706}.btn.light{background:#e2e8f0;color:#0f172a}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.manager-row,.project-row{display:flex;gap:12px;flex-wrap:wrap}.pill{border:1px solid var(--line);background:#fff;color:#0f172a;border-radius:18px;padding:12px 16px;cursor:pointer;min-width:120px;box-shadow:0 3px 10px rgba(15,23,42,.04)}.pill.active{background:#eff6ff;border-color:#2563eb;color:#1d4ed8}.pill b{display:block;font-size:17px}.pill span{font-size:12px;color:var(--muted)}
+.drop{border:2px dashed #cbd5e1;background:#f8fafc;border-radius:20px;padding:18px;text-align:center}.drop.active{border-color:var(--blue);background:#eff6ff}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:16px;border-radius:20px;background:#f8fafc;border:1px solid #e2e8f0}.stat .n{font-size:28px;font-weight:950;letter-spacing:-.04em}.stat .t{font-size:12px;color:var(--muted);font-weight:800}.table-wrap{overflow:auto;max-height:560px;border-radius:18px;border:1px solid var(--line)}table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;font-size:13px}th{position:sticky;top:0;background:#0f172a;color:white;text-align:left;padding:11px 10px;z-index:1;white-space:nowrap}td{border-bottom:1px solid #edf2f7;padding:9px 10px;vertical-align:middle}tr:hover td{background:#f8fafc}.num{text-align:right;font-variant-numeric:tabular-nums}.center{text-align:center}.good{background:var(--greenbg)!important;color:#065f46;font-weight:900}.bad{background:var(--redbg)!important;color:#991b1b;font-weight:900}.mid{background:var(--amberbg)!important;color:#92400e;font-weight:900}.empty{color:#94a3b8}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{padding:9px 13px;border-radius:999px;background:#e2e8f0;border:0;cursor:pointer;font-weight:900}.tab.active{background:#111827;color:#fff}.notice{padding:12px 14px;border-radius:16px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13px}.okbox{padding:12px 14px;border-radius:16px;background:#ecfdf5;border:1px solid #bbf7d0;color:#065f46;font-size:13px}.search{max-width:340px}.footer{color:#64748b;text-align:center;padding:22px}.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:30}.modal .box{width:min(760px,100%);background:#fff;border-radius:24px;padding:20px;box-shadow:0 20px 80px rgba(0,0,0,.25)}.modal.show{display:flex}.history-list{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:16px}.tag{display:inline-flex;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900}.tag.green{background:var(--greenbg);color:#065f46}.tag.red{background:var(--redbg);color:#991b1b}.tag.gray{background:#e2e8f0;color:#334155}@media(max-width:1000px){.span8,.span4,.span6{grid-column:span 12}.stats{grid-template-columns:repeat(2,1fr)}.top{display:block}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="title"><h1>📊 PRO Мониторинг цен 4.1</h1><p>Загрузка файлов по менеджерам, отдельная загрузка остатков, срезы по датам, история изменений, сравнение периодов и общий контроль руководителя.</p></div>
+    <div class="badge">🟢 локальная версия / готово к Google Sheets</div>
+  </div>
+
+  <div class="grid">
+    <div class="card span12">
+      <h2>1) Период загрузки</h2>
+      <div class="row">
+        <div class="field"><label>Дата среза</label><input type="date" id="periodDate"></div>
+        <div class="field"><label>Название периода</label><input id="periodName" placeholder="например: 29.04 / Неделя 18 / Проверка после акции"></div>
+        <div class="field"><label>Сравнить с периодом</label><select id="comparePeriod"></select></div>
+        <button class="btn dark" id="makePeriodBtn">➕ Создать/выбрать период</button>
+        <button class="btn light" id="openHistoryBtn">🕘 История периодов</button>
+      </div>
+      <div class="small" style="margin-top:8px">Логика: новые файлы перезаписывают текущий список моделей выбранного периода, но старые периоды остаются в истории. Цены и комментарии сохраняются отдельно по каждому периоду.</div>
+    </div>
+
+    <div class="card span8">
+      <h2>2) Загрузка файлов менеджеров</h2>
+      <div class="drop" id="dropZone">
+        <b>📤 Перетащи CSV/XLSX сюда или выбери файлы</b><br>
+        <span class="small">Поддерживается твой формат: <b>Менеджер;Проект;Модель</b>. Можно грузить сразу несколько файлов: Игорь Аско, Ильяс ПТ, Оля WB, Стас Гига.</span><br><br>
+        <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls" />
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn green" id="importReplaceBtn">🔄 Загрузить и перезаписать выбранный период</button>
+        <button class="btn amber" id="importAddBtn">➕ Дозагрузить к периоду</button>
+        <button class="btn red" id="clearPeriodBtn">🗑 Очистить выбранный период</button>
+        <button class="btn light" id="templateBtn">📥 Шаблон CSV</button>
+      </div>
+      <div id="importStatus" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card span4">
+      <h2>3) Загрузка остатков</h2>
+      <div class="drop" id="stockDropZone">
+        <b>📦 Файл остатков Excel/CSV</b><br>
+        <span class="small">Формат: <b>Модель;Остаток;В пути</b>. Можно также: Проект;Модель;Остаток;В пути.</span><br><br>
+        <input type="file" id="stockFileInput" multiple accept=".csv,.xlsx,.xls" />
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn green" id="importStockBtn">🔄 Загрузить остатки в период</button>
+        <button class="btn light" id="stockTemplateBtn">📥 Шаблон остатков</button>
+      </div>
+      <div id="stockStatus" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card span4">
+      <h2>Сводка текущего периода</h2>
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <div class="card span12">
+      <h2>4) Менеджеры</h2>
+      <div class="manager-row" id="managerRow"></div>
+    </div>
+
+    <div class="card span12">
+      <h2>5) Проекты</h2>
+      <div class="project-row" id="projectRow"></div>
+    </div>
+
+    <div class="card span12">
+      <div class="toolbar">
+        <div class="field search"><label>Поиск модели</label><input id="searchInput" placeholder="Введите модель / бренд / часть названия"></div>
+        <div class="field"><label>Фильтр</label><select id="statusFilter"><option value="all">Все</option><option value="bad">Только хуже рынка</option><option value="good">Только лучше рынка</option><option value="empty">Не заполнены цены</option><option value="changed">Изменились к сравнению</option></select></div>
+        <button class="btn" id="exportBtn">📎 Скачать общий отчёт CSV</button>
+        <button class="btn gray" id="backupBtn">💾 Скачать резервную копию JSON</button>
+        <button class="btn light" id="restoreBtn">📂 Загрузить резервную копию</button>
+        <input type="file" id="restoreInput" accept=".json" style="display:none">
+      </div>
+    </div>
+
+    <div class="card span12">
+      <h2 id="workTitle">Рабочая таблица</h2>
+      <div class="notice" style="margin-bottom:12px">Менеджер вводит: наша цена, 1–3 цены конкурентов и комментарий. Остатки можно вносить руками или загружать отдельным файлом. Программа считает минимального конкурента, разницу %, статус и изменение относительно выбранного прошлого периода.</div>
+      <div class="table-wrap"><table id="mainTable"><thead><tr><th>Менеджер</th><th>Проект</th><th>Модель</th><th class="num">Остаток</th><th class="num">В пути</th><th class="num">Наша цена</th><th class="num">Мин. конкурент</th><th class="num">Конк. 1</th><th class="num">Конк. 2</th><th class="num">Конк. 3</th><th class="num">Разница</th><th>Статус</th><th class="num">Изм. цены</th><th class="num">Изм. остатка</th><th>Комментарий</th><th>Действия</th></tr></thead><tbody id="mainBody"></tbody></table></div>
+    </div>
+
+    <div class="card span6">
+      <h2>ТОП проблем</h2>
+      <div class="table-wrap" style="max-height:360px"><table><thead><tr><th>Модель</th><th>Проект</th><th class="num">Наша</th><th class="num">Мин. конкурент</th><th class="num">Разница</th></tr></thead><tbody id="problemBody"></tbody></table></div>
+    </div>
+    <div class="card span6">
+      <h2>Динамика относительно прошлого периода</h2>
+      <div class="table-wrap" style="max-height:360px"><table><thead><tr><th>Модель</th><th>Проект</th><th class="num">Было</th><th class="num">Стало</th><th class="num">Изменение</th></tr></thead><tbody id="changesBody"></tbody></table></div>
+    </div>
+  </div>
+  <div class="footer">PRO 4.1 · Цены + остатки по периодам. Для общей ссылки подключи этот файл к Google Apps Script/Google Sheets. В этой версии данные сохраняются в браузере.</div>
+</div>
+
+<div class="modal" id="historyModal"><div class="box"><h2>История периодов</h2><div class="history-list"><table><thead><tr><th>Период</th><th>Дата</th><th class="num">Моделей</th><th class="num">Заполнено цен</th><th></th></tr></thead><tbody id="periodHistoryBody"></tbody></table></div><br><button class="btn gray" onclick="closeHistory()">Закрыть</button></div></div>
+
+<script>
+const STORE_KEY='pro_price_monitor_4_periods';
+// ВСТАВЬ СЮДА URL веб-приложения Apps Script после публикации
+const API_URL='https://script.google.com/macros/s/AKfycbyNwZ2J8IK3tqL2Mpf_Q79CDvkBeFsppEc2U6YhaE4wzl3ZuYJpUvyxmILzevFqAddjhA/exec';
+let cloudTimer=null;
+const MANAGERS=['Стас','Оля','Ильяс','Игорь'];
+let state={periods:{},currentPeriod:'',currentManager:'Все',currentProject:'Все'};
+function today(){return new Date().toISOString().slice(0,10)}
+function periodId(date,name){return `${date}__${(name||'Срез').trim()}`}
+function esc(s){return String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function money(v){if(v===''||v==null||isNaN(Number(v)))return '';return Number(v).toLocaleString('ru-RU')}
+function num(v){if(v===''||v==null)return '';let n=Number(String(v).replace(/\s/g,'').replace(',','.'));return isNaN(n)?'':n}
+function save(){localStorage.setItem(STORE_KEY,JSON.stringify(state)); scheduleCloudSave()}
+function scheduleCloudSave(){if(!API_URL||API_URL.includes('PASTE_'))return; clearTimeout(cloudTimer); cloudTimer=setTimeout(saveCloud,700)}
+async function saveCloud(){if(!API_URL||API_URL.includes('PASTE_'))return; try{await fetch(API_URL,{method:'POST',body:JSON.stringify({state})}); const el=document.querySelector('.badge'); if(el)el.innerHTML='🟢 синхронизировано с Google Sheets'}catch(e){const el=document.querySelector('.badge'); if(el)el.innerHTML='🟡 локально, ошибка синхронизации'}}
+async function loadCloud(){if(!API_URL||API_URL.includes('PASTE_'))return false; try{const res=await fetch(API_URL+'?t='+Date.now()); const data=await res.json(); if(data&&data.state&&data.state.periods){state=data.state; localStorage.setItem(STORE_KEY,JSON.stringify(state)); const el=document.querySelector('.badge'); if(el)el.innerHTML='🟢 данные из Google Sheets'; return true}}catch(e){const el=document.querySelector('.badge'); if(el)el.innerHTML='🟡 локальная версия, Google не ответил'} return false}
+function load(){try{const s=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(s&&s.periods)state=s}catch(e){} if(!state.currentPeriod){const id=periodId(today(),'Текущий срез');state.currentPeriod=id;state.periods[id]={id,date:today(),name:'Текущий срез',rows:{},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}}}
+function cur(){return state.periods[state.currentPeriod]}
+function rowKey(m,p,model){return [m,p,model].join('|||')}
+function rowsOf(period=cur()){return Object.values(period?.rows||{})}
+function getMinComp(r){const vals=[r.comp1,r.comp2,r.comp3].map(num).filter(v=>v>0);return vals.length?Math.min(...vals):''}
+function diffPct(r){const our=num(r.ourPrice), min=getMinComp(r); if(!our||!min)return ''; return ((our-min)/min*100)}
+function statusOf(r){const d=diffPct(r); if(d==='')return {txt:'Нет цен',cls:'tag gray'}; if(d<=-3)return {txt:'Лучше рынка',cls:'tag green'}; if(d>=3)return {txt:'Хуже рынка',cls:'tag red'}; return {txt:'Норма',cls:'tag gray'}}
+function compareRow(r){const cid=document.getElementById('comparePeriod')?.value; if(!cid||!state.periods[cid])return null; return state.periods[cid].rows[rowKey(r.manager,r.project,r.model)]||null}
+function priceChange(r){const old=compareRow(r); if(!old)return ''; const a=num(old.ourPrice), b=num(r.ourPrice); if(!a||!b)return ''; return b-a}
+function stockChange(r){const old=compareRow(r); if(!old)return ''; const a=num(old.stock), b=num(r.stock); if(a===''||b==='')return ''; return b-a}
+function parseDateLabel(id){const p=state.periods[id];return p?`${p.date} — ${p.name}`:id}
+async function parseFiles(files){let all=[];for(const file of files){const ext=file.name.toLowerCase().split('.').pop();let rows=[];if(ext==='xlsx'||ext==='xls'){const buf=await file.arrayBuffer();const wb=XLSX.read(new Uint8Array(buf),{type:'array'});const sh=wb.Sheets[wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(sh,{header:1,defval:''});}else{let text=await file.text();text=text.replace(/^\uFEFF/,'');rows=text.split(/\r?\n/).filter(Boolean).map(line=>{const sep=line.includes(';')?';':line.includes('\t')?'\t':',';return line.split(sep).map(x=>x.trim())});}
+rows.forEach((r,i)=>{if(r.length<3)return;let m=String(r[0]||'').trim(),p=String(r[1]||'').trim(),model=String(r[2]||'').trim();const low=(m+p+model).toLowerCase();if(i===0&&(low.includes('менеджер')||low.includes('проект')||low.includes('модель')||low.includes('номенклатура')))return;if(!m||!p||!model)return;all.push({manager:m,project:p,model,source:file.name});});}return all}
+async function parseStockFiles(files){
+  let all=[];
+  for(const file of files){
+    const ext=file.name.toLowerCase().split('.').pop();
+    let rows=[];
+    if(ext==='xlsx'||ext==='xls'){
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(new Uint8Array(buf),{type:'array'});
+      const sh=wb.Sheets[wb.SheetNames[0]];
+      rows=XLSX.utils.sheet_to_json(sh,{header:1,defval:''});
+    }else{
+      let text=await file.text();
+      text=text.replace(/^\uFEFF/,'');
+      rows=text.split(/\r?\n/).filter(Boolean).map(line=>{
+        const sep=line.includes(';')?';':line.includes('\t')?'\t':',';
+        return line.split(sep).map(x=>x.trim());
+      });
+    }
+    if(!rows.length) continue;
+
+    const header=(rows[0]||[]).map(x=>String(x||'').trim().toLowerCase());
+    const hasHeader=header.some(h=>h.includes('номенклат')||h.includes('модель')||h.includes('остат')||h.includes('склад')||h.includes('пути'));
+    let idx={project:-1,model:-1,brand:-1,stock:-1,inTransit:-1};
+    if(hasHeader){
+      header.forEach((h,i)=>{
+        if(idx.project<0 && (h==='проект'||h.includes('магазин'))) idx.project=i;
+        if(idx.model<0 && (h.includes('номенклат')||h.includes('модель')||h.includes('model'))) idx.model=i;
+        if(idx.brand<0 && h.includes('бренд')) idx.brand=i;
+        if(idx.inTransit<0 && (h.includes('в пути')||h.includes('пути')||h.includes('transit'))) idx.inTransit=i;
+        if(idx.stock<0 && (h.includes('остат')||h.includes('склад')||h.includes('stock'))) idx.stock=i;
+      });
+      // Если колонка "Товары в пути" тоже содержит слово stock/склад, приоритет оставляем за inTransit.
+      if(idx.stock===idx.inTransit) idx.stock=-1;
+    }
+
+    const start=hasHeader?1:0;
+    for(let i=start;i<rows.length;i++){
+      const r=rows[i]||[];
+      if(!r.some(v=>String(v||'').trim())) continue;
+      let project='',model='',stock='',inTransit='',brand='';
+      if(hasHeader && idx.model>=0){
+        project=idx.project>=0?String(r[idx.project]||'').trim():'';
+        model=String(r[idx.model]||'').trim();
+        brand=idx.brand>=0?String(r[idx.brand]||'').trim():'';
+        stock=idx.stock>=0?String(r[idx.stock]||'').trim():'';
+        inTransit=idx.inTransit>=0?String(r[idx.inTransit]||'').trim():'';
+      }else{
+        // Поддерживаем простые шаблоны:
+        // 1) Модель;Остаток;В пути
+        // 2) Проект;Модель;Остаток;В пути
+        if(r.length>=4){project=String(r[0]||'').trim();model=String(r[1]||'').trim();stock=String(r[2]||'').trim();inTransit=String(r[3]||'').trim();}
+        else if(r.length>=3){model=String(r[0]||'').trim();stock=String(r[1]||'').trim();inTransit=String(r[2]||'').trim();}
+      }
+      if(!model) continue;
+      all.push({project,model,brand,stock,inTransit,source:file.name});
+    }
+  }
+  return all;
+}
+function importStockRows(list){const p=cur();let updated=0,notFound=[];for(const item of list){let matches=Object.values(p.rows||{}).filter(r=>String(r.model).trim().toLowerCase()===String(item.model).trim().toLowerCase() && (!item.project || String(r.project).trim().toLowerCase()===String(item.project).trim().toLowerCase()));if(!matches.length){notFound.push(item.model);continue;}for(const r of matches){r.stock=item.stock;r.inTransit=item.inTransit;r.stockSource=item.source;r.updatedAt=new Date().toISOString();r.updatedBy=localStorage.getItem('monitorUser')||'Пользователь';updated++;}}p.updatedAt=new Date().toISOString();save();render();document.getElementById('stockStatus').innerHTML=`<div class="okbox">✅ Остатки загружены. Обновлено строк: ${updated}. Не найдено моделей: ${notFound.length}${notFound.length?'<br><span class="small">'+esc(notFound.slice(0,20).join(', '))+(notFound.length>20?' ...':'')+'</span>':''}</div>`}
+function importRows(list,mode='replace'){const p=cur();let old=p.rows||{};let next=mode==='add'?{...old}:{};let added=0,kept=0;for(const item of list){const k=rowKey(item.manager,item.project,item.model);const previous=old[k]||{};next[k]={manager:item.manager,project:item.project,model:item.model,stock:previous.stock??'',inTransit:previous.inTransit??'',stockSource:previous.stockSource??'',ourPrice:previous.ourPrice??'',comp1:previous.comp1??'',comp2:previous.comp2??'',comp3:previous.comp3??'',comment:previous.comment??'',updatedAt:previous.updatedAt??'',updatedBy:previous.updatedBy??'',source:item.source}; if(!old[k])added++; else kept++;}
+p.rows=next;p.updatedAt=new Date().toISOString();save();render();document.getElementById('importStatus').innerHTML=`<div class="okbox">✅ Загружено моделей: ${list.length}. Новых: ${added}. Совпавших с прошлым списком: ${kept}. Режим: ${mode==='replace'?'перезапись периода':'дозагрузка'}.</div>`}
+function renderPeriods(){const d=document.getElementById('periodDate'), n=document.getElementById('periodName'); if(!d.value)d.value=cur().date;if(!n.value)n.value=cur().name; const cmp=document.getElementById('comparePeriod'); const current=cmp.value; cmp.innerHTML='<option value="">Не сравнивать</option>'+Object.values(state.periods).sort((a,b)=>b.date.localeCompare(a.date)).filter(p=>p.id!==state.currentPeriod).map(p=>`<option value="${esc(p.id)}">${esc(p.date+' — '+p.name)}</option>`).join(''); if(state.periods[current])cmp.value=current;}
+function renderManagers(){const box=document.getElementById('managerRow');const rows=rowsOf();const names=['Все',...MANAGERS,...Array.from(new Set(rows.map(r=>r.manager).filter(m=>!MANAGERS.includes(m))))];box.innerHTML=names.map(m=>{const arr=m==='Все'?rows:rows.filter(r=>r.manager===m);const projects=new Set(arr.map(r=>r.project)).size;return `<div class="pill ${state.currentManager===m?'active':''}" onclick="state.currentManager='${esc(m)}';state.currentProject='Все';save();render()"><b>${esc(m)}</b><span>${projects} проектов · ${arr.length} моделей</span></div>`}).join('')}
+function renderProjects(){const box=document.getElementById('projectRow');let rows=rowsOf();if(state.currentManager!=='Все')rows=rows.filter(r=>r.manager===state.currentManager);const projects=['Все',...Array.from(new Set(rows.map(r=>r.project))).sort()];box.innerHTML=projects.map(p=>{const arr=p==='Все'?rows:rows.filter(r=>r.project===p);return `<div class="pill ${state.currentProject===p?'active':''}" onclick="state.currentProject='${esc(p)}';save();render()"><b>${esc(p)}</b><span>${arr.length} моделей</span></div>`}).join('')}
+function filteredRows(){let rows=rowsOf();if(state.currentManager!=='Все')rows=rows.filter(r=>r.manager===state.currentManager);if(state.currentProject!=='Все')rows=rows.filter(r=>r.project===state.currentProject);const q=(document.getElementById('searchInput')?.value||'').toLowerCase().trim();if(q)rows=rows.filter(r=>(r.model+' '+r.project+' '+r.manager).toLowerCase().includes(q));const f=document.getElementById('statusFilter')?.value||'all';if(f==='bad')rows=rows.filter(r=>diffPct(r)!==''&&diffPct(r)>=3);if(f==='good')rows=rows.filter(r=>diffPct(r)!==''&&diffPct(r)<=-3);if(f==='empty')rows=rows.filter(r=>!num(r.ourPrice)||!getMinComp(r));if(f==='changed')rows=rows.filter(r=>priceChange(r)!=='');return rows.sort((a,b)=>a.manager.localeCompare(b.manager,'ru')||a.project.localeCompare(b.project,'ru')||a.model.localeCompare(b.model,'ru'))}
+function renderTable(){const rows=filteredRows();document.getElementById('workTitle').textContent=`Рабочая таблица — ${parseDateLabel(state.currentPeriod)} (${rows.length})`;document.getElementById('mainBody').innerHTML=rows.map(r=>{const k=rowKey(r.manager,r.project,r.model);const min=getMinComp(r);const d=diffPct(r);const st=statusOf(r);const ch=priceChange(r);const sch=stockChange(r);let stockChTxt=sch===''?'':(sch>0?`+${money(sch)}`:money(sch));let stockChCls=sch===''?'':(sch>0?'good':sch<0?'bad':'mid');let chTxt=ch===''?'':(ch>0?`+${money(ch)}`:money(ch));let chCls=ch===''?'':(ch>0?'bad':ch<0?'good':'mid');return `<tr data-key="${esc(k)}"><td>${esc(r.manager)}</td><td>${esc(r.project)}</td><td><b>${esc(r.model)}</b><div class="small">${esc(r.source||'')}</div></td><td><input class="num" data-field="stock" value="${esc(r.stock||'')}"></td><td><input class="num" data-field="inTransit" value="${esc(r.inTransit||'')}"></td><td><input class="num" data-field="ourPrice" value="${esc(r.ourPrice||'')}"></td><td class="num"><b>${money(min)}</b></td><td><input class="num" data-field="comp1" value="${esc(r.comp1||'')}"></td><td><input class="num" data-field="comp2" value="${esc(r.comp2||'')}"></td><td><input class="num" data-field="comp3" value="${esc(r.comp3||'')}"></td><td class="num ${d===''?'':d>=3?'bad':d<=-3?'good':'mid'}">${d===''?'<span class="empty">—</span>':d.toFixed(1)+'%'}</td><td><span class="${st.cls}">${st.txt}</span></td><td class="num ${chCls}">${chTxt||'<span class="empty">—</span>'}</td><td class="num ${stockChCls}">${stockChTxt||'<span class="empty">—</span>'}</td><td><input data-field="comment" value="${esc(r.comment||'')}" placeholder="комментарий"></td><td><button class="btn green" onclick="saveLine('${esc(k)}')">💾</button></td></tr>`}).join('')}
+function saveLine(k){const tr=document.querySelector(`tr[data-key="${CSS.escape(k)}"]`);if(!tr)return;const r=cur().rows[k];tr.querySelectorAll('input[data-field]').forEach(inp=>{r[inp.dataset.field]=inp.value.trim()});r.updatedAt=new Date().toISOString();r.updatedBy=localStorage.getItem('monitorUser')||'Пользователь';cur().updatedAt=new Date().toISOString();save();render()}
+function renderStats(){const rows=rowsOf();const filled=rows.filter(r=>num(r.ourPrice)&&getMinComp(r)).length;const bad=rows.filter(r=>diffPct(r)!==''&&diffPct(r)>=3).length;const good=rows.filter(r=>diffPct(r)!==''&&diffPct(r)<=-3).length;const stockSum=rows.reduce((s,r)=>s+(num(r.stock)||0),0);const transitSum=rows.reduce((s,r)=>s+(num(r.inTransit)||0),0);document.getElementById('stats').innerHTML=`<div class="stat"><div class="n">${rows.length}</div><div class="t">моделей</div></div><div class="stat"><div class="n">${filled}</div><div class="t">с ценами</div></div><div class="stat"><div class="n">${good}</div><div class="t">лучше рынка</div></div><div class="stat"><div class="n">${bad}</div><div class="t">хуже рынка</div></div><div class="stat"><div class="n">${money(stockSum)}</div><div class="t">остаток, шт</div></div><div class="stat"><div class="n">${money(transitSum)}</div><div class="t">в пути, шт</div></div>`}
+function renderSideTables(){let probs=rowsOf().filter(r=>diffPct(r)!==''&&diffPct(r)>=3).sort((a,b)=>diffPct(b)-diffPct(a)).slice(0,20);document.getElementById('problemBody').innerHTML=probs.map(r=>`<tr><td>${esc(r.model)}</td><td>${esc(r.project)}</td><td class="num">${money(r.ourPrice)}</td><td class="num">${money(getMinComp(r))}</td><td class="num bad">${diffPct(r).toFixed(1)}%</td></tr>`).join('')||'<tr><td colspan="5" class="center empty">Проблем пока нет</td></tr>';let changes=rowsOf().map(r=>({r,ch:priceChange(r),old:compareRow(r)})).filter(x=>x.ch!=='').sort((a,b)=>Math.abs(b.ch)-Math.abs(a.ch)).slice(0,30);document.getElementById('changesBody').innerHTML=changes.map(x=>`<tr><td>${esc(x.r.model)}</td><td>${esc(x.r.project)}</td><td class="num">${money(x.old.ourPrice)}</td><td class="num">${money(x.r.ourPrice)}</td><td class="num ${x.ch>0?'bad':x.ch<0?'good':'mid'}">${x.ch>0?'+':''}${money(x.ch)}</td></tr>`).join('')||'<tr><td colspan="5" class="center empty">Выберите период для сравнения</td></tr>'}
+function renderHistory(){const body=document.getElementById('periodHistoryBody');body.innerHTML=Object.values(state.periods).sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{const rows=rowsOf(p);const filled=rows.filter(r=>num(r.ourPrice)).length;return `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.date)}</td><td class="num">${rows.length}</td><td class="num">${filled}</td><td><button class="btn ${p.id===state.currentPeriod?'gray':'dark'}" onclick="selectPeriod('${esc(p.id)}')">Открыть</button></td></tr>`}).join('')}
+function render(){renderPeriods();renderManagers();renderProjects();renderStats();renderTable();renderSideTables();renderHistory()}
+function selectPeriod(id){state.currentPeriod=id;save();closeHistory();render()}
+function closeHistory(){document.getElementById('historyModal').classList.remove('show')}
+function exportCSV(){const rows=filteredRows();const head=['Период','Дата','Менеджер','Проект','Модель','Остаток','В пути','Наша цена','Мин конкурент','Конк1','Конк2','Конк3','Разница %','Статус','Изменение цены','Изменение остатка','Комментарий'];const data=[head,...rows.map(r=>{const d=diffPct(r), st=statusOf(r).txt, ch=priceChange(r);return [cur().name,cur().date,r.manager,r.project,r.model,r.stock,r.inTransit,r.ourPrice,getMinComp(r),r.comp1,r.comp2,r.comp3,d===''?'':d.toFixed(1),st,ch,stockChange(r),r.comment]})];const csv=data.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\n');downloadBlob('\uFEFF'+csv,`monitoring_${cur().date}_${cur().name}.csv`,'text/csv')}
+function downloadBlob(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+function backup(){downloadBlob(JSON.stringify(state,null,2),`backup_monitor_${today()}.json`,'application/json')}
+function template(){downloadBlob('\uFEFFМенеджер;Проект;Модель\nСтас;Гига;HW50-BP1026\nОля;WB Вега;DS 3200 G\nИльяс;ПТ;KLF03CREU\nИгорь;Аско;W1084BW','template_monitor.csv','text/csv')}
+function stockTemplate(){downloadBlob('\uFEFFМодель;Остаток;В пути\nHW50-BP1026;12;4\nDS 3200 G;3;0\nW1084BW;1;2','template_stock.csv','text/csv')}
+function makePeriod(){const date=document.getElementById('periodDate').value||today();const name=document.getElementById('periodName').value.trim()||'Срез';const id=periodId(date,name);if(!state.periods[id])state.periods[id]={id,date,name,rows:{},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};state.currentPeriod=id;save();render()}
+async function doImport(mode){makePeriod();const files=document.getElementById('fileInput').files;if(!files.length){alert('Выберите CSV/XLSX файлы');return}const rows=await parseFiles(files);if(!rows.length){alert('Не нашла строки формата: Менеджер;Проект;Модель');return}importRows(rows,mode);document.getElementById('fileInput').value=''}
+async function doStockImport(){makePeriod();const files=document.getElementById('stockFileInput').files;if(!files.length){alert('Выберите файл остатков CSV/XLSX');return}const rows=await parseStockFiles(files);if(!rows.length){alert('Не нашла строки формата: Модель;Остаток;В пути');return}importStockRows(rows);document.getElementById('stockFileInput').value=''}
+(async()=>{await loadCloud();load();document.getElementById('periodDate').value=cur().date;document.getElementById('periodName').value=cur().name;document.getElementById('makePeriodBtn').onclick=makePeriod;document.getElementById('importReplaceBtn').onclick=()=>doImport('replace');document.getElementById('importAddBtn').onclick=()=>doImport('add');document.getElementById('clearPeriodBtn').onclick=()=>{if(confirm('Очистить модели и цены только в выбранном периоде?')){cur().rows={};cur().updatedAt=new Date().toISOString();save();render()}};document.getElementById('templateBtn').onclick=template;document.getElementById('stockTemplateBtn').onclick=stockTemplate;document.getElementById('importStockBtn').onclick=doStockImport;document.getElementById('exportBtn').onclick=exportCSV;document.getElementById('backupBtn').onclick=backup;document.getElementById('restoreBtn').onclick=()=>document.getElementById('restoreInput').click();document.getElementById('restoreInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const s=JSON.parse(await f.text());if(!s.periods)throw Error('неверный файл');state=s;save();render()}catch(err){alert('Ошибка резервной копии: '+err.message)}};document.getElementById('openHistoryBtn').onclick=()=>{renderHistory();document.getElementById('historyModal').classList.add('show')};document.getElementById('searchInput').oninput=render;document.getElementById('statusFilter').onchange=render;document.getElementById('comparePeriod').onchange=render;['dragenter','dragover'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.add('active')}));['dragleave','drop'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.remove('active')}));dropZone.addEventListener('drop',e=>{document.getElementById('fileInput').files=e.dataTransfer.files});['dragenter','dragover'].forEach(ev=>stockDropZone.addEventListener(ev,e=>{e.preventDefault();stockDropZone.classList.add('active')}));['dragleave','drop'].forEach(ev=>stockDropZone.addEventListener(ev,e=>{e.preventDefault();stockDropZone.classList.remove('active')}));stockDropZone.addEventListener('drop',e=>{document.getElementById('stockFileInput').files=e.dataTransfer.files});if(!localStorage.getItem('monitorUser')){const n=prompt('Ваше имя для истории изменений','Галина');if(n)localStorage.setItem('monitorUser',n)}render();})();
+</script>
+</body>
+</html>
